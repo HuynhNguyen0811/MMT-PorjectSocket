@@ -53,13 +53,44 @@ void updateData(std::string data) {
     f.close();
 }
 
-int main() {
-    Document d;
-    d.Parse(collectDataFromWeb().c_str());
-    for (int i = 0; i < d.Size(); i++) {
-        if (strcmp(d[i]["country"].GetString(), "USA") == 0) {
-            std::cout << d[i]["country"].GetString() << std::endl;
-            std::cout << "Cases: " << d[i]["cases"].GetInt64() << " - " << "Today cases: " << d[i]["todayCases"].GetInt64() << std::endl;
+bool searchDataByDate(std::string date, Document &doc) {
+    std::ifstream fileIn;
+    fileIn.open("Data\\" + date + ".txt");
+
+    if (fileIn.fail()) return 0;
+
+    std::string temp;
+
+    getline(fileIn, temp);
+    doc.Parse(temp.c_str());
+
+    fileIn.close();
+}
+
+bool searchDataByCountryName(std::string name, std::string date, Value& data) {
+    Document doc;
+    if (searchDataByDate(date, doc)) {
+        return 0;
+    }
+    for (int i = 0; i < doc.Size(); i++) {
+        if (doc[i]["country"].GetString() == name) {
+            data = doc[i].GetObjectW();
+            return 1;
         }
     }
+}
+
+int main() {
+    Document document;
+    Value res;
+    std::string temp = collectDataFromWeb();
+    
+    document.Parse(temp.c_str());
+
+    for (int i = 0; i < document.Size(); i++) {
+        if (strcmp(document[i]["country"].GetString(), "Croatia") == 0) {
+            res = document[i].GetObjectW();
+        }
+    } 
+    std::cout << res["country"].GetString() << " " << res["cases"].GetInt64();
 }
