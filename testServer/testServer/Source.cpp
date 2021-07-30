@@ -9,6 +9,7 @@
 #include "rapidjson/document.h"
 
 using namespace rapidjson;
+using namespace std;
 
 static size_t my_write(void* buffer, size_t size, size_t nmemb, void* param)
 {
@@ -80,17 +81,84 @@ bool searchDataByCountryName(std::string name, std::string date, Value& data) {
     }
 }
 
-int main() {
-    Document document;
-    Value res;
-    std::string temp = collectDataFromWeb();
-    
-    document.Parse(temp.c_str());
+bool checkLogin(string user, string pass) {
+    ifstream fileIn;
+    fileIn.open("login.txt");
 
-    for (int i = 0; i < document.Size(); i++) {
-        if (strcmp(document[i]["country"].GetString(), "Croatia") == 0) {
-            res = document[i].GetObjectW();
+    if (fileIn.fail()) return 0;
+
+    string checkUser, checkPass;
+    while (fileIn) {
+        getline(fileIn, checkUser, ',');
+        getline(fileIn, checkPass, '\n');
+        if (checkUser == user && checkPass == pass) {
+            fileIn.close();
+            return 1;
         }
-    } 
-    std::cout << res["country"].GetString() << " " << res["cases"].GetInt64();
+    }
+
+    fileIn.close();
+    return 0;
+}
+
+bool checkRegis(string user) {
+    ifstream fileIn;
+    fileIn.open("login.txt");
+
+    if (fileIn.fail()) return 1;
+
+    string checkUser, checkPass;
+    while (fileIn) {
+        getline(fileIn, checkUser, ',');
+        getline(fileIn, checkPass, '\n');
+        if (checkUser == user) {
+            fileIn.close();
+            return 0;
+        }
+    }
+
+    fileIn.close();
+    return 1;
+}
+
+void regis(string user, string pass) {
+    ofstream fileOut;
+    fileOut.open("login.txt", ios_base::app);
+
+    fileOut << user << "," << pass << endl;
+
+    fileOut.close();
+}
+
+void charToString(string& destination, const char* source, int n) {
+    for (int i = 0; i < n; i++) {
+        destination += source[i];
+    }
+}
+
+int main() {
+    //Document document;
+    //Value res;
+    //std::string temp = collectDataFromWeb();
+    //
+    //document.Parse(temp.c_str());
+
+    //for (int i = 0; i < document.Size(); i++) {
+    //    if (strcmp(document[i]["country"].GetString(), "Croatia") == 0) {
+    //        res = document[i].GetObjectW();
+    //    }
+    //    //std::cout << document[i]["cases"].GetInt64() << std::endl;
+    //} 
+    //std::cout << res["country"].GetString() << " " << res["cases"].GetInt64();
+
+    string checkUser, checkPass;
+    /*while (true) {
+        cin >> checkUser;
+        cin >> checkPass;
+        cout << "Login " << checkLogin(checkUser, checkPass);
+        cout << "Regis" << checkRegis(checkUser);
+        regis(checkUser, checkPass);
+    }*/
+    charToString(checkUser, "hahahihi", 9);
+    cout << checkUser;
 }
