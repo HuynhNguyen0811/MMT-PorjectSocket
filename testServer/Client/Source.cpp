@@ -3,6 +3,9 @@
 #include<WS2tcpip.h>
 #include<string>
 
+#include "rapidjson/document.h"
+using namespace rapidjson;
+
 #pragma comment(lib, "ws2_32.lib")
 
 using namespace std;
@@ -90,8 +93,14 @@ int main() {
 		}
 		else
 			if (byteReceived > 0) {
-				//Echo respone to console
-				cout << "SERVER>" << string(buf, 0, byteReceived) << endl;
+				Document document;
+				document.Parse(buf);
+				if (document.IsObject()) {
+					cout << "SERVER>Country: " << document["country"].GetString() << " Cases: " << document["cases"].GetInt64() << endl;
+				}
+				else {
+					cout << "SERVER>" << buf << endl;
+				}
 			}
 		cout << ">";
 		getline(cin, userInput);

@@ -7,6 +7,8 @@
 #include <fstream>
 #include "curl/curl.h"
 #include "rapidjson/document.h"
+#include "rapidjson/writer.h"
+#include "rapidjson/stringbuffer.h"
 
 using namespace rapidjson;
 using namespace std;
@@ -54,10 +56,11 @@ void updateData(std::string data) {
     f.close();
 }
 
-bool searchDataByDate(std::string date, Document &doc) {
+bool searchDataByDate(std::string date, Document& doc) {
     std::ifstream fileIn;
     fileIn.open("Data\\" + date + ".txt");
-
+    //string a = "Data\\" + date + ".txt";
+    //cout << a;
     if (fileIn.fail()) return 0;
 
     std::string temp;
@@ -66,19 +69,28 @@ bool searchDataByDate(std::string date, Document &doc) {
     doc.Parse(temp.c_str());
 
     fileIn.close();
+    return 1;
 }
 
-bool searchDataByCountryName(std::string name, std::string date, Value& data) {
+
+bool searchDataByCountryName(std::string name, std::string date, string &res) {
     Document doc;
     if (searchDataByDate(date, doc)) {
-        return 0;
-    }
-    for (int i = 0; i < doc.Size(); i++) {
-        if (doc[i]["country"].GetString() == name) {
-            data = doc[i].GetObjectW();
-            return 1;
+        for (int i = 0; i < doc.Size(); i++) {
+            cout << doc[i]["country"].GetString() << endl;
+            if (doc[i]["country"].GetString() == name) {
+                StringBuffer buffer;
+                rapidjson::Writer<StringBuffer> writer(buffer);
+                doc[i].Accept(writer);
+
+                res = buffer.GetString();
+                //cout << data["cases"].GetInt64();
+                //cout << data["country"].IsString();
+                return 1;
+            }
         }
     }
+    return 0;
 }
 
 bool checkLogin(string user, string pass) {
@@ -137,28 +149,11 @@ void charToString(string& destination, const char* source, int n) {
 }
 
 int main() {
-    //Document document;
-    //Value res;
-    //std::string temp = collectDataFromWeb();
-    //
-    //document.Parse(temp.c_str());
-
-    //for (int i = 0; i < document.Size(); i++) {
-    //    if (strcmp(document[i]["country"].GetString(), "Croatia") == 0) {
-    //        res = document[i].GetObjectW();
-    //    }
-    //    //std::cout << document[i]["cases"].GetInt64() << std::endl;
-    //} 
-    //std::cout << res["country"].GetString() << " " << res["cases"].GetInt64();
-
-    string checkUser, checkPass;
-    /*while (true) {
-        cin >> checkUser;
-        cin >> checkPass;
-        cout << "Login " << checkLogin(checkUser, checkPass);
-        cout << "Regis" << checkRegis(checkUser);
-        regis(checkUser, checkPass);
-    }*/
-    charToString(checkUser, "hahahihi", 9);
-    cout << checkUser;
+    Document document;
+    string res;
+    cout << searchDataByCountryName("Iran", "26072021", res);
+    //std::cout << res["country"].GetString() << "|" << res["cases"].GetInt64();
+    cout << res;
+    document.Parse(res.c_str());
+    cout << endl << document["country"].GetString();
 }

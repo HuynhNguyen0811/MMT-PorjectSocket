@@ -6,6 +6,12 @@
 #include<string>
 #include <fstream>
 
+//json
+#include "rapidjson/document.h"
+#include "rapidjson/writer.h"
+#include "rapidjson/stringbuffer.h"
+using namespace rapidjson;
+
 #pragma comment (lib, "ws2_32.lib")
 
 using namespace std;
@@ -69,6 +75,41 @@ void regis(string user, string pass) {
 	fileOut.close();
 }
 
+bool searchDataByDate(std::string date, Document& doc) {
+	std::ifstream fileIn;
+	fileIn.open("Data\\" + date + ".txt");
+	//string a = "Data\\" + date + ".txt";
+	//cout << a;
+	if (fileIn.fail()) return 0;
+
+	std::string temp;
+
+	getline(fileIn, temp);
+	doc.Parse(temp.c_str());
+
+	fileIn.close();
+	return 1;
+}
+
+bool searchDataByCountryName(std::string name, std::string date, string& res) {
+	Document doc;
+	if (searchDataByDate(date, doc)) {
+		for (int i = 0; i < doc.Size(); i++) {
+			cout << doc[i]["country"].GetString() << endl;
+			if (doc[i]["country"].GetString() == name) {
+				StringBuffer buffer;
+				rapidjson::Writer<StringBuffer> writer(buffer);
+				doc[i].Accept(writer);
+
+				res = buffer.GetString();
+				//cout << data["cases"].GetInt64();
+				//cout << data["country"].IsString();
+				return 1;
+			}
+		}
+	}
+	return 0;
+}
 
 int main() {
 	string ss;
@@ -186,8 +227,11 @@ int main() {
 					byteReceived = recv(clientSocket, buf, 1024, 0);
 					password = string(buf, byteReceived);
 					if (checkLogin(username, password)) {
-						message = "Login successful";
+						message = "Login successful\nEnter name of country you want to know Covid situation\n";
 						send(clientSocket, message.c_str(), message.size() + 1, 0);
+
+						ss = "dummy";
+						send(sock, ss.c_str(), ss.size(), 0);
 						break;
 					}
 					else {
@@ -201,24 +245,21 @@ int main() {
 					send(clientSocket, message.c_str(), message.size() + 1, 0);
 					ZeroMemory(buf, 1024);
 					byteReceived = recv(clientSocket, buf, 1024, 0);
-					cout << buf;
 					username = string(buf, byteReceived);
-					cout << " " << username;
 
 					message = "Password: ";
 					send(clientSocket, message.c_str(), message.size() + 1, 0);
 					ZeroMemory(buf, 1024);
 					byteReceived = recv(clientSocket, buf, 1024, 0);
-					cout << buf;
 					password = string(buf, byteReceived);
-					cout << " " << password;
 
 					if (checkRegis(username)) {
-						cout << endl << username << " " << password << endl;
 						regis(username, password);
-						message = "Regis successful";
-						cout << message;
+						message = "Regis successful\nEnter name of country you want to know Covid situation\n";
 						send(clientSocket, message.c_str(), message.size() + 1, 0);
+
+						ss = "dummy";
+						send(sock, ss.c_str(), ss.size(), 0);
 						break;
 					}
 					else {
@@ -227,15 +268,13 @@ int main() {
 					}
 				}
 				else {
-					string message = "Invalid output";
+					string message = "Invalid output\n";
 					send(clientSocket, message.c_str(), message.size() + 1, 0);
 					closesocket(clientSocket);
 					FD_CLR(clientSocket, &master);
 				}
 			}
 			else {
-				ss = "What do u need?";
-				send(sock, ss.c_str(), ss.size(), 0);
 				char buf[1024];
 
 				ZeroMemory(buf, 1024);
@@ -253,6 +292,14 @@ int main() {
 
 				else {
 					cout << "Client " << sock << " sent > " << buf << endl;
+					string res;
+					if (searchDataByCountryName(buf, "26072021", res)) {
+						send(sock, res.c_str(), res.size(), 0);
+					}
+					else {
+						res = "Can't find";
+						send(sock, res.c_str(), res.size(), 0);
+					}
 				}
 			}
 		}
